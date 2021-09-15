@@ -1,53 +1,9 @@
 
-# ## Our Mission ##
-# 
-# Spam detection is one of the major applications of Machine Learning in the interwebs today. Pretty much all of the major email service providers have spam detection systems built in and automatically classify such mail as 'Junk Mail'. 
-# 
-# In this mission we will be using the Naive Bayes algorithm to create a model that can classify [dataset](https://archive.ics.uci.edu/ml/datasets/SMS+Spam+Collection) SMS messages as spam or not spam, based on the training we give to the model. It is important to have some level of intuition as to what a spammy text message might look like. Usually they have words like 'free', 'win', 'winner', 'cash', 'prize' and the like in them as these texts are designed to catch your eye and in some sense tempt you to open them. Also, spam messages tend to have words written in all capitals and also tend to use a lot of exclamation marks. To the recipient, it is usually pretty straightforward to identify a spam text and our objective here is to train a model to do that for us!
-# 
-# Being able to identify spam messages is a binary classification problem as messages are classified as either 'Spam' or 'Not Spam' and nothing else. Also, this is a supervised learning problem, as we will be feeding a labelled dataset into the model, that it can learn from, to make future predictions. 
-
-# ### Step 0: Introduction to the Naive Bayes Theorem ###
-# 
-# Bayes theorem is one of the earliest probabilistic inference algorithms developed by Reverend Bayes (which he used to try and infer the existence of God no less) and still performs extremely well for certain use cases. 
-# 
-# It's best to understand this theorem using an example. Let's say you are a member of the Secret Service and you have been deployed to protect the Democratic presidential nominee during one of his/her campaign speeches. Being a public event that is open to all, your job is not easy and you have to be on the constant lookout for threats. So one place to start is to put a certain threat-factor for each person. So based on the features of an individual, like the age, sex, and other smaller factors like is the person carrying a bag?, does the person look nervous? etc. you can make a judgement call as to if that person is viable threat. 
-# 
-# If an individual ticks all the boxes up to a level where it crosses a threshold of doubt in your mind, you can take action and remove that person from the vicinity. The Bayes theorem works in the same way as we are computing the probability of an event(a person being a threat) based on the probabilities of certain related events(age, sex, presence of bag or not, nervousness etc. of the person). 
-# 
-# One thing to consider is the independence of these features amongst each other. For example if a child looks nervous at the event then the likelihood of that person being a threat is not as much as say if it was a grown man who was nervous. To break this down a bit further, here there are two features we are considering, age AND nervousness. Say we look at these features individually, we could design a model that flags ALL persons that are nervous as potential threats. However, it is likely that we will have a lot of false positives as there is a strong chance that minors present at the event will be nervous. Hence by considering the age of a person along with the 'nervousness' feature we would definitely get a more accurate result as to who are potential threats and who aren't. 
-# 
-# This is the 'Naive' bit of the theorem where it considers each feature to be independent of each other which may not always be the case and hence that can affect the final judgement.
-# 
-# In short, the Bayes theorem calculates the probability of a certain event happening(in our case, a message being  spam) based on the joint probabilistic distributions of certain other events(in our case, a message being classified as spam). We will dive into the workings of the Bayes theorem later in the mission, but first, let us understand the data we are going to work with.
-
-# ### Step 1.1: Understanding our dataset ### 
-# 
-# 
-# We will be using a [dataset](https://archive.ics.uci.edu/ml/datasets/SMS+Spam+Collection) from the UCI Machine Learning repository which has a very good collection of datasets for experimental research purposes. The direct data link is [here](https://archive.ics.uci.edu/ml/machine-learning-databases/00228/).
-# 
-# 
-#  ** Here's a preview of the data: ** 
-# 
-
-# 
-# The columns in the data set are currently not named and as you can see, there are 2 columns. 
-# 
-# The first column takes two values, 'ham' which signifies that the message is not spam, and 'spam' which signifies that the message is spam. 
-# 
-# The second column is the text content of the SMS message that is being classified.
-
-# >** Instructions: **
 # * Import the dataset into a pandas dataframe using the read_table method. Because this is a tab separated dataset we will be using '\t' as the value for the 'sep' argument which specifies this format. 
 # * Also, rename the column names by specifying a list ['label, 'sms_message'] to the 'names' argument of read_table().
 # * Print the first five values of the dataframe with the new column names.
 
 
-
-
-'''
-Solution
-'''
 import pandas as pd
 # Dataset from - https://archive.ics.uci.edu/ml/datasets/SMS+Spam+Collection
 df = pd.read_table("smsspamcollection/SMSSpamCollection",names = ['label', 'sms_message'] , sep = '\t', header = None )
@@ -58,24 +14,16 @@ df.head()
 
 # ### Step 1.2: Data Preprocessing ###
 # 
-# Now that we have a basic understanding of what our dataset looks like, lets convert our labels to binary variables, 0 to represent 'ham'(i.e. not spam) and 1 to represent 'spam' for ease of computation. 
-# 
-# You might be wondering why do we need to do this step? The answer to this lies in how scikit-learn handles inputs. Scikit-learn only deals with numerical values and hence if we were to leave our label values as strings, scikit-learn would do the conversion internally(more specifically, the string labels will be cast to unknown float values). 
-# 
+
+#
 # Our model would still be able to make predictions if we left our labels as strings but we could have issues later when calculating performance metrics, for example when calculating our precision and recall scores. Hence, to avoid unexpected 'gotchas' later, it is good practice to have our categorical values be fed into our model as integers. 
 
-# >**Instructions: **
+
 # * Convert the values in the 'label' column to numerical values using map method as follows:
 # {'ham':0, 'spam':1} This maps the 'ham' value to 0 and the 'spam' value to 1.
 # * Also, to get an idea of the size of the dataset we are dealing with, print out number of rows and columns using 
 # 'shape'.
 
-
-
-
-'''
-Solution
-'''
 df['label'] = df.label.map({'ham': 0, 'spam': 1})
 print(df.shape)
 
@@ -134,16 +82,10 @@ print(df.shape)
 #              'Call me now.',
 #              'Hello, Call hello you tomorrow?']
 # ```
-# >>** Instructions: **
+# >>** 
 # * Convert all the strings in the documents set to their lower case. Save them into a list called 'lower_case_documents'. You can convert strings to their lower case in python by using the lower() method.
 # 
 
-
-
-
-'''
-Solution:
-'''
 documents = ['Hello, how are you!',
              'Win money, win from home.',
              'Call me now.',
@@ -157,16 +99,10 @@ print(lower_case_documents)
 
 # ** Step 2: Removing all punctuations **
 # 
-# >>**Instructions: **
+# 
 # Remove all punctuation from the strings in the document set. Save them into a list called 
 # 'sans_punctuation_documents'. 
 
-
-
-
-'''
-Solution:
-'''
 sans_punctuation_documents = []
 import string
 
@@ -185,12 +121,6 @@ print(sans_punctuation_documents)
 # in a list called 'preprocessed_documents'.
 # 
 
-
-
-
-'''
-Solution:
-'''
 preprocessed_documents = []
 for i in sans_punctuation_documents:
     preprocessed_documents.append(i.split(' '))
@@ -213,12 +143,6 @@ print(preprocessed_documents)
 # Using the Counter() method and preprocessed_documents as the input, create a dictionary with the keys being each word in each document and the corresponding values being the frequncy of occurrence of that word. Save each Counter dictionary as an item in a list called 'frequency_list'.
 # 
 
-
-
-
-'''
-Solution
-'''
 frequency_list = []
 import pprint
 from collections import Counter
@@ -230,19 +154,13 @@ for i in preprocessed_documents:
 pprint.pprint(frequency_list)
 
 
-# Congratulations! You have implemented the Bag of Words process from scratch! As we can see in our previous output, we have a frequency distribution dictionary which gives a clear view of the text that we are dealing with.
+# we have implemented the Bag of Words process from scratch! As we can see in our previous output, we have a frequency distribution dictionary which gives a clear view of the text that we are dealing with.
 # 
-# We should now have a solid understanding of what is happening behind the scenes in the `sklearn.feature_extraction.text.CountVectorizer` method of scikit-learn. 
-# 
+
 # We will now implement `sklearn.feature_extraction.text.CountVectorizer` method in the next step.
 
 # ### Step 2.3: Implementing Bag of Words in scikit-learn ###
 # 
-# Now that we have implemented the BoW concept from scratch, let's go ahead and use scikit-learn to do this process in a clean and succinct way. We will use the same document set as we used in the previous step. 
-
-
-
-
 '''
 Here we will look to create a frequency matrix on a smaller document set to make sure we understand how the 
 document-term matrix generation happens. We have created a sample document set 'documents'.
@@ -256,12 +174,6 @@ documents = ['Hello, how are you!',
 # >>**Instructions:**
 # Import the sklearn.feature_extraction.text.CountVectorizer method and create an instance of it called 'count_vector'. 
 
-
-
-
-'''
-Solution
-'''
 from sklearn.feature_extraction.text import CountVectorizer
 count_vector = CountVectorizer()
 
@@ -285,10 +197,6 @@ count_vector = CountVectorizer()
 #     The `stop_words` parameter, if set to `english` will remove all words from our document set that match a list of English stop words which is defined in scikit-learn. Considering the size of our dataset and the fact that we are dealing with SMS messages and not larger text sources like e-mail, we will not be setting this parameter value.
 # 
 # You can take a look at all the parameter values of your `count_vector` object by simply printing out the object as follows:
-
-
-
-
 '''
 Practice node:
 Print the 'count_vector' object which is an instance of 'CountVectorizer()'
@@ -300,12 +208,6 @@ print(count_vector)
 # Fit your document dataset to the CountVectorizer object you have created using fit(), and get the list of words 
 # which have been categorized as features using the get_feature_names() method.
 
-
-
-
-'''
-Solution:
-'''
 count_vector.fit(documents)
 count_vector.get_feature_names_out()
 
@@ -321,12 +223,6 @@ count_vector.get_feature_names_out()
 # toarray(). Call the array 'doc_array'
 # 
 
-
-
-
-'''
-Solution
-'''
 doc_array = count_vector.transform(documents).toarray()
 doc_array
 
@@ -338,12 +234,6 @@ doc_array
 # the word names(which you computed earlier using get_feature_names(). Call the dataframe 'frequency_matrix'.
 # 
 
-
-
-
-'''
-Solution
-'''
 frequency_matrix = pd.DataFrame(doc_array, columns  = count_vector.get_feature_names_out())
 frequency_matrix
 
@@ -370,12 +260,8 @@ frequency_matrix
 # * `y_test` is our testing data for the 'label' column
 # Print out the number of rows we have in each our training and testing data.
 # 
-
-
-
-
 '''
-Solution
+
 
 NOTE: sklearn.cross_validation will be deprecated soon to sklearn.model_selection 
 '''
@@ -404,10 +290,6 @@ print('Number of rows in the test set: {}'.format(X_test.shape[0]))
 # `X_test` is our testing data for the 'sms_message' column and this is the data we will be using(after transformation to a matrix) to make predictions on. We will then compare those predictions with `y_test` in a later step. 
 # 
 # For now, we have provided the code that does the matrix transformations for you!
-
-
-
-
 '''
 [Practice Node]
 
@@ -421,12 +303,6 @@ We will provide the transformed data to students in the variables 'training_data
 '''
 
 
-
-
-
-'''
-Solution
-'''
 # Instantiate the CountVectorizer method
 count_vector = CountVectorizer()
 
@@ -475,21 +351,13 @@ testing_data = count_vector.transform(X_test)
 # The probability of getting a positive test result `P(Pos)` can be calculated using the Sensitivity and Specificity as follows:
 # 
 # `P(Pos) = [P(D) * Sensitivity] + [P(~D) * (1-Specificity))]`
-
-
-
-
 '''
 Instructions:
 Calculate probability of getting a positive test result, P(Pos)
 '''
 
-
-
-
-
 '''
-Solution (skeleton code will be provided)
+ (skeleton code will be provided)
 '''
 # P(D)
 p_diabetes = 0.01
@@ -519,10 +387,6 @@ print('The probability of getting a positive test result P(Pos) is: {}',format(p
 # `P(~D/Pos) = (P(~D) * (1-Specificity)) / P(Pos)`
 # 
 # The sum of our posteriors will always equal `1`. 
-
-
-
-
 '''
 Instructions:
 Compute the probability of an individual having diabetes, given that, that individual got a positive test result.
@@ -532,19 +396,9 @@ The formula is: P(D|Pos) = (P(D) * P(Pos|D) / P(Pos)
 '''
 
 
-
-
-
-'''
-Solution
-'''
 # P(D|Pos)
 p_diabetes_pos = p_diabetes* p_pos_diabetes/ p_pos
 print('Probability of an individual having diabetes, given that that individual got a positive test result is:',format(p_diabetes_pos)) 
-
-
-
-
 
 '''
 Instructions:
@@ -560,12 +414,6 @@ P(Pos/~D) = p_pos_no_diabetes = 1 - 0.9 = 0.1
 '''
 
 
-
-
-
-'''
-Solution
-'''
 # P(Pos/~D)
 p_pos_no_diabetes = 0.1
 
@@ -619,10 +467,6 @@ print('Probability of an individual not having diabetes, given that that individ
 # * `P(G|F,I)`: Probability of Gary Johnson saying the words Freedom and Immigration.  
 #     
 #     Using the formula, we can compute this as follows: `P(G|F,I)` = `(P(G) * P(F|G) * P(I|G)) / P(F,I)`
-
-
-
-
 '''
 Instructions: Compute the probability of the words 'freedom' and 'immigration' being said in a speech, or
 P(F,I).
@@ -636,12 +480,8 @@ probabilities of saying the words 'freedom' and 'immigration'. Store this in a v
 The third step is to add both of these probabilities and you will get P(F,I).
 '''
 
-
-
-
-
 '''
-Solution: Step 1
+: Step 1
 '''
 # P(J)
 p_j = 0.5
@@ -655,12 +495,8 @@ p_j_i = 0.1
 p_j_text = p_j_i * p_j_f * p_j
 print(p_j_text)
 
-
-
-
-
 '''
-Solution: Step 2
+: Step 2
 '''
 # P(G)
 p_g = 0.5
@@ -674,40 +510,22 @@ p_g_i = 0.2
 p_g_text = p_g * p_g_i * p_g_f
 print(p_g_text)
 
-
-
-
-
 '''
-Solution: Step 3: Compute P(F,I) and store in p_f_i
+: Step 3: Compute P(F,I) and store in p_f_i
 '''
 p_f_i = p_g_text + p_j_text
 print('Probability of words freedom and immigration being said are: ', format(p_f_i))
 
 
 # Now we can compute the probability of `P(J|F,I)`, that is the probability of Jill Stein saying the words Freedom and Immigration and `P(G|F,I)`, that is the probability of Gary Johnson saying the words Freedom and Immigration.
-
-
-
-
 '''
 Instructions:
 Compute P(J|F,I) using the formula P(J|F,I) = (P(J) * P(F|J) * P(I|J)) / P(F,I) and store it in a variable p_j_fi
 '''
 
 
-
-
-
-'''
-Solution
-'''
 p_j_fi = (p_j * p_j_f * p_j_i) / p_f_i
 print('The probability of Jill Stein saying the words Freedom and Immigration: ', format(p_j_fi))
-
-
-
-
 
 '''
 Instructions:
@@ -715,12 +533,6 @@ Compute P(G|F,I) using the formula P(G|F,I) = (P(G) * P(F|G) * P(I|G)) / P(F,I) 
 '''
 
 
-
-
-
-'''
-Solution
-'''
 p_g_fi = p_g_text / p_f_i
 print('The probability of Gary Johnson saying the words Freedom and Immigration: ', format(p_g_fi))
 
@@ -737,10 +549,6 @@ print('The probability of Gary Johnson saying the words Freedom and Immigration:
 # Thankfully, sklearn has several Naive Bayes implementations that we can use and so we do not have to do the math from scratch. We will be using sklearns `sklearn.naive_bayes` method to make predictions on our dataset. 
 # 
 # Specifically, we will be using the multinomial Naive Bayes implementation. This particular classifier is suitable for classification with discrete features (such as in our case, word counts for text classification). It takes in integer word counts as its input. On the other hand Gaussian Naive Bayes is better suited for continuous data as it assumes that the input data has a Gaussian(normal) distribution.
-
-
-
-
 '''
 Instructions:
 
@@ -752,19 +560,9 @@ Import the MultinomialNB classifier and fit the training data into the classifie
 '''
 
 
-
-
-
-'''
-Solution
-'''
 from sklearn.naive_bayes import MultinomialNB
 naive_bayes = MultinomialNB()
 naive_bayes.fit(training_data, y_train)
-
-
-
-
 
 '''
 Instructions:
@@ -773,12 +571,6 @@ stored in 'testing_data' using predict(). Save your predictions into the 'predic
 '''
 
 
-
-
-
-'''
-Solution
-'''
 predictions = naive_bayes.predict(testing_data)
 
 
@@ -803,10 +595,6 @@ predictions = naive_bayes.predict(testing_data)
 # For classification problems that are skewed in their classification distributions like in our case, for example if we had a 100 text messages and only 2 were spam and the rest 98 weren't, accuracy by itself is not a very good metric. We could classify 90 messages as not spam(including the 2 that were spam but we classify them as not spam, hence they would be false negatives) and 10 as spam(all 10 false positives) and still get a reasonably good accuracy score. For such cases, precision and recall come in very handy. These two metrics can be combined to get the F1 score, which is weighted average of the precision and recall scores. This score can range from 0 to 1, with 1 being the best possible F1 score.
 
 # We will be using all 4 metrics to make sure our model does well. For all 4 metrics whose values can range from 0 to 1, having a score as close to 1 as possible is a good indicator of how well our model is doing.
-
-
-
-
 '''
 Instructions:
 Compute the accuracy, precision, recall and F1 scores of your model using your test data 'y_test' and the predictions
@@ -814,12 +602,6 @@ you made earlier stored in the 'predictions' variable.
 '''
 
 
-
-
-
-'''
-Solution
-'''
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 print('Accuracy score: ', format(accuracy_score(y_test, predictions)))
 print('Precision score: ', format(precision_score(y_test, predictions)))
@@ -832,6 +614,4 @@ print('F1 score: ', format(f1_score(y_test, predictions)))
 # One of the major advantages that Naive Bayes has over other classification algorithms is its ability to handle an extremely large number of features. In our case, each word is treated as a feature and there are thousands of different words. Also, it performs well even with the presence of irrelevant features and is relatively unaffected by them. The other major advantage it has is its relative simplicity. Naive Bayes' works well right out of the box and tuning it's parameters is rarely ever necessary, except usually in cases where the distribution of the data is known. 
 # It rarely ever overfits the data. Another important advantage is that its model training and prediction times are very fast for the amount of data it can handle. All in all, Naive Bayes' really is a gem of an algorithm!
 # 
-# Congratulations! You have successfully designed a model that can efficiently predict if an SMS message is spam or not!
-# 
-# Thank you for learning with us!
+
